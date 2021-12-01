@@ -16,6 +16,10 @@ if CVPGlobals['CVP_CUSTOM_LABELS'] is not None:
  
  
 if __name__ == "__main__":
+  print("\nOS Environment:\n")
+  for (k, v) in os.environ.items():
+    print("os.environ['%s']: %s" % (k,v))
+  #
   print("\nSample CVP Globals:\n")
   for (k, v) in CVPGlobals.items():
     print("CVPGlobals['%s']: %s" % (k,v))
@@ -24,44 +28,77 @@ if __name__ == "__main__":
   for (k, v) in CVPLabels.items():
     print("CVPLabels['%s']: %s" % (k,v))
 
+
 """
-OUTPUT:
+#### OUTPUT: #####
+
+NOTE: Some content has been stripped, redacted, or shortened for better viewing
+      and to minimize data leakage.
  
+OS Environment:
+
+os.environ['AERIS_INGEST_KEY']: <randomkey>
+os.environ['CVP_MODE']: singlenode
+os.environ['CVP_VERSION']: 2020.2.3
+os.environ['HOME']: /
+os.environ['HOSTNAME']: <cvphostname.fqdn.example>
+os.environ['KUBERNETES_PORT']: tcp://192.0.2.1:443
+os.environ['KUBERNETES_PORT_443_TCP']: tcp://192.0.2.1:443
+os.environ['KUBERNETES_PORT_443_TCP_ADDR']: 192.0.2.1
+os.environ['KUBERNETES_PORT_443_TCP_PORT']: 443
+os.environ['KUBERNETES_PORT_443_TCP_PROTO']: tcp
+os.environ['KUBERNETES_SERVICE_HOST']: 192.0.2.1
+os.environ['KUBERNETES_SERVICE_PORT']: 443
+os.environ['KUBERNETES_SERVICE_PORT_HTTPS']: 443
+os.environ['PATH']: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+os.environ['PRIMARY_DEVICE_INTF_IP']: 192.168.0.3
+os.environ['PRIMARY_HOSTNAME']: <cvphostname.fqdn.example>
+os.environ['PRIMARY_HOST_IP']: 192.168.0.3
+os.environ['PWD']: /
+os.environ['SECONDARY_DEVICE_INTF_IP']: 
+os.environ['SECONDARY_HOSTNAME']: 
+os.environ['SECONDARY_HOST_IP']: 
+os.environ['SHLVL']: 1
+os.environ['TERTIARY_DEVICE_INTF_IP']: 
+os.environ['TERTIARY_HOSTNAME']: 
+os.environ['TERTIARY_HOST_IP']: 
+os.environ['_']: /usr/bin/python
+
 Sample CVP Globals:
- 
-CVPGlobals['ZTP_USERNAME']: cvptemp
-CVPGlobals['CURRENT_DEVICE_MAC']: None
-CVPGlobals['CVP_MAC']: 00:1c:73:c2:c6:01
-CVPGlobals['CVP_ALL_LABELS']: None
-CVPGlobals['ZTP_STATE']: false
-CVPGlobals['CVP_USERNAME']: arista
-CVPGlobals['CVP_SESSION_ID']: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkaWQiOjQ5LCJkc24iOiJhcmlzdGEiLCJkc3QiOiJ1c2VyIiwic2lkIjoiZTZkNmNiZDEyMjljZmQ4YTNjN2JmOWY2Y2QxZjg5ZGY2ZmVjYmQ4MmE4OGI5NGU0N2Y4NzE1MTM3M2ZkNDU0NC1MeXV5X2JfVDlZYmhMeENmY0FxNmNQMi04UFRPY2psb0x0Q25KMDhSIn0.sLu3OHDWGdcXf3au6ix8DAitKX43tWXvEASaIlY8wiGD3Hben3ZdP5ggNdxs9gyNnftXtj-MsQJXt37XivbW1Ejvm_voiQ2VREQ40qR4v7E1IIUDmfJzWaYGg6nprBCuSaCm6dQGWGRN451CeGVizz3aMIsmgr_r-AmW9BhteH0YBFuKZ0EZo_y00pALcV_-mbojUyXawL3hX_lp8e5QSTzMl7HxYIotFlnN9be-SpPUn51_uYB7jMgd0VewhDltekRW0tT8t2EDqBxCayUltjjn2evvZYaWJY0_ibPORuaQZgLiEtc3AzVMmgGn9iHqdmEweceL2FCet8Rb2XUGsNFgA2JRb6HbBR2Lm9UZauXMeb1hkdJbqBVOC_89uCevZdoL1_Np5Q2VWq4a1885xnsar1Nz-7bTtH1-OPHOO6xz5QyDi6H6kjT38iFq5ORSfBpze4a4FzahyVwrjq9aitLr7jeLhRlRv4ckeUKZ2Mj0KVDYPG7lt6PsGwi1FmlwODW5AGV-PBLaS3p7wyNYfgjkuKY01OlmBOK8M61SN783n03SrWpLWEtH7MoIZl_b3kAiwsX1BO-AKlvB8nTt99SMGfM6AjWojm7XYU94wpQiGtxbTfJ-n-2J3GNG5EZW7tLkNM_D0ArbICH7VHtLgrjk3-zz7HPNDr00POCV7Wc
-CVPGlobals['CURRENT_DEVICE_SERIAL']: None
-CVPGlobals['CVP_CUSTOM_LABELS']: []
-CVPGlobals['ZTP_PASSWORD']: None
-CVPGlobals['CVP_IP']: 192.168.0.22
-CVPGlobals['CVP_PASSWORD']: aristaXXXX
-CVPGlobals['SCRIPT_ARGS']: None
-CVPGlobals['CVP_SYSTEM_LABELS']: ['bgp:disabled', 'tapagg:none', 'eostrain:4.25', 'topology_rack:leaf1-DC1-leaf2-DC1', 'topology_type:leaf', 'mpls:false', 'systype:fixed', 'topology_pod:OOB-DC1-spine1-DC1-spine2-DC1-spine3-DC1', 'Container:DC1', 'Container:Tenant', 'Container:Leaf-DC1', 'Container:Right-DC1', 'hostname:leaf2-DC1', 'model:cEOSLab', 'eos:4.25.1F', 'ztp:false', 'serialnumber:leaf2-DC1', 'terminattr:v1.12.1']
+
 CVPGlobals['CURRENT_DEVICE_IP']: None
+CVPGlobals['CURRENT_DEVICE_MAC']: None
+CVPGlobals['CURRENT_DEVICE_SERIAL']: None
+CVPGlobals['CVP_ALL_LABELS']: None
+CVPGlobals['CVP_CUSTOM_LABELS']: []
+CVPGlobals['CVP_IP']: 192.168.0.22
+CVPGlobals['CVP_MAC']: XX:XX:XX:XX:XX:XX
+CVPGlobals['CVP_PASSWORD']: <cvppassword>
 CVPGlobals['CVP_SERIAL']: leaf2-DC1
- 
+CVPGlobals['CVP_SESSION_ID']: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...[removedForBrevity]...zz7HPNDr00POCV7Wc
+CVPGlobals['CVP_SYSTEM_LABELS']: ['ztp:false', 'terminattr:v1.12.1', 'tapagg:none', 'topology_rack:leaf1-DC1-leaf2-DC1', 'topology_type:leaf', 'bgp:disabled', 'eostrain:4.25', 'systype:fixed', 'eos:4.25.1F', 'topology_pod:OOB-DC1-spine1-DC1-spine2-DC1-spine3-DC1', 'model:cEOSLab', 'hostname:leaf2-DC1', 'Container:DC1', 'Container:Tenant', 'Container:Leaf-DC1', 'Container:Right-DC1', 'mpls:false', 'serialnumber:leaf2-DC1']
+CVPGlobals['CVP_USERNAME']: <username>
+CVPGlobals['SCRIPT_ARGS']: None
+CVPGlobals['ZTP_PASSWORD']: None
+CVPGlobals['ZTP_STATE']: false
+CVPGlobals['ZTP_USERNAME']: <ztpuser>
+
 Sample CVP Labels:
- 
-CVPLabels['tapagg']: none
-CVPLabels['hostname']: leaf2-DC1
+
 CVPLabels['Container']: Right-DC1
+CVPLabels['bgp']: disabled
 CVPLabels['eos']: 4.25.1F
-CVPLabels['topology_pod']: OOB-DC1-spine1-DC1-spine2-DC1-spine3-DC1
+CVPLabels['eostrain']: 4.25
+CVPLabels['hostname']: leaf2-DC1
+CVPLabels['model']: cEOSLab
 CVPLabels['mpls']: false
 CVPLabels['serialnumber']: leaf2-DC1
-CVPLabels['bgp']: disabled
+CVPLabels['systype']: fixed
+CVPLabels['tapagg']: none
+CVPLabels['terminattr']: v1.12.1
+CVPLabels['topology_pod']: OOB-DC1-spine1-DC1-spine2-DC1-spine3-DC1
 CVPLabels['topology_rack']: leaf1-DC1-leaf2-DC1
 CVPLabels['topology_type']: leaf
-CVPLabels['terminattr']: v1.12.1
-CVPLabels['model']: cEOSLab
-CVPLabels['systype']: fixed
 CVPLabels['ztp']: false
-CVPLabels['eostrain']: 4.25
 
 """
