@@ -2,4 +2,4 @@
 
 ## Timesaver Snippets
 
-1. Get useful dictionaries from CVPGlobalVariables and GlobalVariableNames -- [ [CVPLabelExpansion.py](CVPLabelExpansion.py) ]
+1. Get useful dictionaries from CVPGlobalVariables and GlobalVariableNames -- [[CVPLabelExpansion.py](CVPLabelExpansion.py)] [[raw](CVPLabelExpansion.py?raw=true)]
