@@ -10,9 +10,11 @@ from cvplibrary import Form                as CVPForm, \
 # ** NOTE: if a custom label could happen to be the same as a system label, 
 #          the value in the mapping is overwritten. Not sure this is an issue. Untested. **
 CVPGlobals = { varname: CVPGV.getValue(varname) for varname in dir(CVPVarNames) if '__' not in varname }
-CVPLabels = { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_SYSTEM_LABELS'] ] }
-if CVPGlobals['CVP_CUSTOM_LABELS'] is not None:
-   CVPLabels.update( { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_CUSTOM_LABELS'] ] } )
+CVPLabels  = {}
+if CVPGlobals['CVP_SYSTEM_LABELS'] is not None:
+   CVPLabels = { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_SYSTEM_LABELS'] ] }
+   if CVPGlobals['CVP_CUSTOM_LABELS'] is not None:
+      CVPLabels.update( { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_CUSTOM_LABELS'] ] } )
  
  
 if __name__ == "__main__":
