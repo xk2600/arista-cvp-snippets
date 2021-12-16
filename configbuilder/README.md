@@ -1,12 +1,10 @@
-# Example Config Builder Scripts
-
-## Cloud Vision Portal State Data
+# Cloud Vision Portal State Data
 
 There are several useful python imports in CVP's ConfigBuilder interpreter
 to gather state information about the device we're trying to configure, or
 CVP itself.
 
-#### os.environ 
+## os.environ 
 
 Environment variables containing information about the instance of CVP. 
 This has greatly expanded in version 2021.0. Interesting variables as 
@@ -21,7 +19,7 @@ follows:
 - `SECONDARY_*`-- ...
 - `TERTIARY_*`-- ...
 
-#### cvplibrary.CVPGlobalVariables
+## cvplibrary.CVPGlobalVariables
 
 CVPGlobalVariables contains state information specific to this Config
 Builder's session and the device it's configuring. This first set all
@@ -45,13 +43,15 @@ expand these into a dictionary.
 - `CVP_CUSTOM_LABELS`-- User specified labels.
 - `CVP_ALL_LABELS`-- Inclusive set of `CVP_SYSTEM_LABELS` and `VP_CUSTOM_LABELS`
 
-###### Builtin labels
+### Builtin labels
 
 `Container:str`  `bgp:disabled|enabled`  `eos:str(version)`   `eostrain:str(maj_version)`    `hostname:str`
 `model:str`      `mpls:bool`             `serialnumber:str`   `systype:fixed|modular`        `tapagg:str`
 `terminattr:str` `topology_pod:path`     `topology_rack:path` `topology_type:leaf|spine|...` `ztp:bool`
 
-## Timesaver Snippets
+
+
+# Examples and Timesaving Snippets
 
 1. **[CVPLabelExpansion.py](CVPLabelExpansion.py)** [[raw](CVPLabelExpansion.py?raw=true)] -- Get useful dictionaries from CVPGlobalVariables and GlobalVariableNames
 2. **[L2EVPNBuilderExample.py](L2EVPNBuilderExample.py)** [[raw](L2EVPNBuilderExample.py?raw=true)] -- Example of using python to generate EVPN Configuration.
