@@ -12,9 +12,9 @@ from cvplibrary import Form                as CVPForm, \
 CVPGlobals = { varname: CVPGV.getValue(varname) for varname in dir(CVPVarNames) if '__' not in varname }
 CVPLabels  = {}
 if CVPGlobals['CVP_SYSTEM_LABELS'] is not None:
-   CVPLabels = { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_SYSTEM_LABELS'] ] }
+   CVPLabels = { k: v for (k,v) in [ kv.split(':', 1) for kv in CVPGlobals['CVP_SYSTEM_LABELS'] ] }
    if CVPGlobals['CVP_CUSTOM_LABELS'] is not None:
-      CVPLabels.update( { k: v for (k,v) in [ kv.split(':') for kv in CVPGlobals['CVP_CUSTOM_LABELS'] ] } )
+      CVPLabels.update( { k: v for (k,v) in [ kv.split(':', 1) for kv in CVPGlobals['CVP_CUSTOM_LABELS'] ] } )
  
  
 if __name__ == "__main__":
@@ -26,7 +26,7 @@ if __name__ == "__main__":
   for (k, v) in CVPGlobals.items():
     print("CVPGlobals['%s']: %s" % (k,v))
   #
-  print("\nSample CVP Labels:\n")  
+  print("\nSample CVP Labels:\n")
   for (k, v) in CVPLabels.items():
     print("CVPLabels['%s']: %s" % (k,v))
 
