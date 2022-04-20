@@ -1,0 +1,124 @@
+#!/usr/bin/python3 xlj2
+!  ___________________________________________________________________________
+!  ] ~~~~~~~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~~~~~~~ [
+!  ]‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾[
+!  ]    /‾\    Under normal circumstances, the following configlet    /‾\    [
+!  ]   / ! \   SHOULD NOT be modified, as the content provides the   / ! \   [
+!  ]  /_____\  minimum configuration required for connectivity.     /_____\  [
+!  ]_________________________________________________________________________[
+!  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+hostname {{ hostname }}
+!
+! .... INCOMPLETE
+!
+{%- for int in interfaces %}
+{%-   if int.hostname == hostname %}
+{%-     if int.type == "fabric" %}
+interface {{ int.interface }}
+   description {{ int.description }}
+   no shutdown
+   mtu 9214
+   no switchport
+   ip address {{ int.ip }}
+!
+{%-     endif %}
+{%-   endif %}
+{%- endfor %}
+interface Loopback0
+   ip address {{ lo0 }}/32
+!
+interface Management1
+   {%- if veos %}
+   mac-address {{ veos_ma1_mac }}
+   {%- endif %}
+   description oob mgmt port
+   no shutdown
+   vrf mgmt
+   ip address {{ mgmt_ip }}/{{mgmt_prefixlen}}
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan virtual-router encapsulation mac-address mlag-system-id
+   vxlan udp-port 4789
+!
+hardware tcam
+   system profile vxlan-routing
+!
+ip virtual-router mac-address {{ vr_mac }}
+!
+mlag configuration
+   domain-id {{ mlag_id }}
+   peer-address heartbeat {{ peer_ip }}
+   peer-link Port-Channel1000
+   dual-primary detection delay 1 action errdisable all-interfaces
+   dual-primary recovery delay mlag 120 non-mlag 20
+   reload-delay mlag 600
+   reload-delay non-mlag 300
+!
+{%- endif %}
+ip route vrf mgmt 0.0.0.0/0 {{ mgmt_gw }}
+!
+router bgp {{ asn }}
+   bgp asn notation asdot
+   router-id {{ lo0 }}
+   {%- if not veos %}
+   update wait-install
+   {%- endif %}
+   distance bgp 20 200 200
+   no bgp default ipv4-unicast
+   maximum-paths 4
+   {%- if odd_leaf != 'no mlag' %}
+   neighbor mlag-peer peer group
+   neighbor mlag-peer send-community 
+   neighbor mlag-peer maximum-routes 12000 warning-limit 80 percent
+   neighbor mlag-peer remote-as {{ asn }}
+   neighbor mlag-peer next-hop-self
+   {%- endif %}
+   neighbor OVERLAY_SPINES_EVPN peer group
+   neighbor OVERLAY_SPINES_EVPN remote-as {{ spine_asn }}
+   neighbor OVERLAY_SPINES_EVPN next-hop-unchanged
+   neighbor OVERLAY_SPINES_EVPN update-source Loopback0
+   neighbor OVERLAY_SPINES_EVPN bfd
+   neighbor OVERLAY_SPINES_EVPN ebgp-multihop 2
+   neighbor OVERLAY_SPINES_EVPN password 7 {{ overlay_pw }}
+   neighbor OVERLAY_SPINES_EVPN send-community
+   neighbor OVERLAY_SPINES_EVPN maximum-routes 150000 warning-limit 80 percent
+   neighbor UNDERLAY_SPINES_V4 peer group
+   neighbor UNDERLAY_SPINES_V4 remote-as {{ spine_asn }}
+   neighbor UNDERLAY_SPINES_V4 password 7 {{ underlay_pw }}
+   neighbor UNDERLAY_SPINES_V4 send-community
+   neighbor UNDERLAY_SPINES_V4 maximum-routes 12000 warning-limit 80 percent
+   {%- for peer in fabric_peers %}
+   {%- if peer.hostname == hostname %}
+   {%- if peer.type == "underlay" %}
+   neighbor {{ peer.ip }} peer group underlay
+   neighbor {{ peer.ip }} description {{ peer.peer_hostname }}
+   {%- endif %}
+   {%- endif %}
+   {%- endfor %}
+   {%- for peer in spines_lo0 %}
+   neighbor {{ peer.ip }} peer group overlay
+   neighbor {{ peer.ip }} description {{ peer.desc }}
+   {%- endfor %}
+   {%- if odd_leaf != 'no mlag' %}
+   {%- if odd_leaf %}
+   neighbor 192.168.255.1 peer group mlag-peer
+   neighbor 192.168.255.1 description {{ mlag_peer }} MLAG
+   {%- else %}
+   neighbor 192.168.255.0 peer group mlag-peer
+   neighbor 192.168.255.0 description {{ mlag_peer }} MLAG
+   {%- endif %}
+   {%- endif %}
+   !
+   address-family evpn
+      neighbor overlay activate
+   !
+   address-family ipv4
+      neighbor underlay activate
+      {%- if odd_leaf != 'no mlag' %}
+      neighbor mlag-peer activate
+      {%- endif %}
+      network {{ lo0 }}/32
+      network {{ lo1 }}/32
+!
+end
