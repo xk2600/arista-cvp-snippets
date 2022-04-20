@@ -1,0 +1,78 @@
+#!/usr/bin/python3 xlj2
+!  ___________________________________________________________________________
+!  ] ~~~~~~~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~~~~~~~ [
+!  ]‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾[
+!  ]    /‾\    Under normal circumstances, the following configlet    /‾\    [
+!  ]   / ! \   SHOULD NOT be modified, as the content provides the   / ! \   [
+!  ]  /_____\  minimum configuration required for connectivity.     /_____\  [
+!  ]_________________________________________________________________________[
+!  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+hostname {{ hostname }}
+!
+{%- for int in interfaces %}
+{%-   if int.hostname == hostname %}
+{%-     if int.type == "fabric" %}
+interface {{ int.interface }}
+   description {{ int.description }}
+   no shutdown
+   mtu 9214
+   no switchport
+   ip address {{ int.ip }}
+!
+{%-     endif %}
+{%-   endif %}
+{%- endfor %}
+interface Loopback0
+   ip address {{ lo0 }}/32
+!
+interface Management1
+   {%- if veos %}
+   mac-address {{ veos_ma1_mac }}
+   {%- endif %}
+   description oob mgmt port
+   no shutdown
+   vrf mgmt
+   ip address {{ mgmt_ip }}/{{mgmt_prefixlen}}
+!
+ip route vrf mgmt 0.0.0.0/0 {{ mgmt_gw }}
+!
+router bgp {{ asn }}
+   bgp asn notation asdot
+   router-id {{ lo0 }}
+   {%- if not veos %}
+   update wait-for-convergence
+   update wait-install
+   {%- endif %}
+   distance bgp 20 200 200
+   no bgp default ipv4-unicast
+   maximum-paths 128
+   neighbor overlay peer group
+   neighbor overlay next-hop-unchanged
+   neighbor overlay update-source Loopback0
+   neighbor overlay bfd
+   neighbor overlay ebgp-multihop 2
+   neighbor overlay password 7 {{ bgp.password }}
+   neighbor overlay send-community
+   neighbor overlay maximum-routes 150000 warning-limit 80 percent
+   neighbor underlay peer group
+   neighbor underlay password 7 {{ bgp.password }}
+   neighbor underlay send-community
+   neighbor underlay maximum-routes 12000 warning-limit 80 percent
+   {%- for peergroup, peer in bgp.peergroups %}
+   {%- if peer.hostname == hostname %}
+   {%- if peer.type == "UNDERLAY_LEAVES_V4" %}
+   neighbor {{ peer.ip }} peer group underlay
+   neighbor {{ peer.ip }} description {{ peer.peer_hostname }}
+   neighbor {{ peer.ip }} remote-as {{ peer.asn }}
+   {%- endif %}
+   {%- endif %}
+   {%- endfor %}
+   !
+   address-family evpn
+      neighbor overlay activate
+   !
+   address-family ipv4
+      neighbor underlay activate
+      network {{ lo0 }}/32
+!
+end
