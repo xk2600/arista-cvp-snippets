@@ -85,21 +85,21 @@ router bgp {{ asn }}
    neighbor UNDERLAY_MLAG_PEER peer group
    neighbor UNDERLAY_MLAG_PEER send-community 
    neighbor UNDERLAY_MLAG_PEER maximum-routes 12000 warning-limit 80 percent
-   neighbor UNDERLAY_MLAG_PEER remote-as {{ asn }}
+   neighbor UNDERLAY_MLAG_PEER remote-as {{ bgp.ASN }}
    neighbor UNDERLAY_MLAG_PEER next-hop-self
    {%- endif %}
    neighbor OVERLAY_SPINES_EVPN peer group
-   neighbor OVERLAY_SPINES_EVPN remote-as {{ spine_asn }}
+   neighbor OVERLAY_SPINES_EVPN remote-as {{ int(bgp.ASN[0:6])*10000 + 100 }}
    neighbor OVERLAY_SPINES_EVPN next-hop-unchanged
    neighbor OVERLAY_SPINES_EVPN update-source Loopback0
    neighbor OVERLAY_SPINES_EVPN bfd
    neighbor OVERLAY_SPINES_EVPN ebgp-multihop 2
-   neighbor OVERLAY_SPINES_EVPN password 7 {{ overlay_pw }}
+   neighbor OVERLAY_SPINES_EVPN password 7 {{ bgp.password }}
    neighbor OVERLAY_SPINES_EVPN send-community
    neighbor OVERLAY_SPINES_EVPN maximum-routes 150000 warning-limit 80 percent
    neighbor UNDERLAY_SPINES_V4 peer group
    neighbor UNDERLAY_SPINES_V4 remote-as {{ spine_asn }}
-   neighbor UNDERLAY_SPINES_V4 password 7 {{ underlay_pw }}
+   neighbor UNDERLAY_SPINES_V4 password 7 {{ bgp.password }}
    neighbor UNDERLAY_SPINES_V4 send-community
    neighbor UNDERLAY_SPINES_V4 maximum-routes 12000 warning-limit 80 percent
    {%- for peergroup in bgp.peergroups %}
