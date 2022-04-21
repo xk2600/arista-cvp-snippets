@@ -1,4 +1,3 @@
-#!/usr/bin/python3 xlj2
 !  ___________________________________________________________________________
 !  ] ~~~~~~~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~  CAUTION  ~~~~~~~~~ [
 !  ]‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾[
@@ -9,27 +8,38 @@
 !  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 hostname {{ hostname }}
 !
-! .... INCOMPLETE
-!
-{%- for int in interfaces %}
-{%-   if int.hostname == hostname %}
-{%-     if int.type == "fabric" %}
-interface {{ int.interface }}
-   description {{ int.description }}
+{%- for interface in interfaces %}
+{%-   if interface.hostname == hostname %}
+{%-     if interface.evpnlink %}
+interface {{ interface.interface }}
+   description {{ interface.description }}
    no shutdown
    mtu 9214
    no switchport
-   ip address {{ int.ip }}
+   ip address {{ interface.ip }}
+!
+{%-     endif %}
+{%-     if interface.transportlink %}
+interface {{ interface.alias }}
+   description {{ interface.description }}
+   no shutdown
+   mtu 9214
+   no switchport
+   ip address {{ interface.ip }}
 !
 {%-     endif %}
 {%-   endif %}
 {%- endfor %}
+!
 interface Loopback0
-   ip address {{ lo0 }}/32
+   ip address {{ router_id }}/32
+!
+interface Loopback1
+   ip address {{ vtep }}/32
 !
 interface Management1
    {%- if veos %}
-   mac-address {{ veos_ma1_mac }}
+   mac-address {{ veos_mac }}
    {%- endif %}
    description oob mgmt port
    no shutdown
@@ -44,35 +54,39 @@ interface Vxlan1
 hardware tcam
    system profile vxlan-routing
 !
+{%- if mlag_heartbeat_ip is not None %}
+{%- for interface in interfaces %}
+interface {{ interface.alias }}
+   description {{ interface.description }}
+   no shutdown
+   switchport
+   channel-group 4000 mode active
+!
+{%- endfor %}
 ip virtual-router mac-address {{ vr_mac }}
 !
 mlag configuration
    domain-id {{ mlag_id }}
-   peer-address heartbeat {{ peer_ip }}
-   peer-link Port-Channel1000
-   dual-primary detection delay 1 action errdisable all-interfaces
-   dual-primary recovery delay mlag 120 non-mlag 20
-   reload-delay mlag 600
-   reload-delay non-mlag 300
+   peer-address heartbeat {{ mlag_heartbeat_ip }}
 !
 {%- endif %}
 ip route vrf mgmt 0.0.0.0/0 {{ mgmt_gw }}
 !
 router bgp {{ asn }}
    bgp asn notation asdot
-   router-id {{ lo0 }}
+   router-id {{ router_id }}
    {%- if not veos %}
    update wait-install
    {%- endif %}
    distance bgp 20 200 200
    no bgp default ipv4-unicast
    maximum-paths 4
-   {%- if odd_leaf != 'no mlag' %}
-   neighbor mlag-peer peer group
-   neighbor mlag-peer send-community 
-   neighbor mlag-peer maximum-routes 12000 warning-limit 80 percent
-   neighbor mlag-peer remote-as {{ asn }}
-   neighbor mlag-peer next-hop-self
+   {%- if mlag_heartbeat_ip is not None %}
+   neighbor UNDERLAY_MLAG_PEER peer group
+   neighbor UNDERLAY_MLAG_PEER send-community 
+   neighbor UNDERLAY_MLAG_PEER maximum-routes 12000 warning-limit 80 percent
+   neighbor UNDERLAY_MLAG_PEER remote-as {{ asn }}
+   neighbor UNDERLAY_MLAG_PEER next-hop-self
    {%- endif %}
    neighbor OVERLAY_SPINES_EVPN peer group
    neighbor OVERLAY_SPINES_EVPN remote-as {{ spine_asn }}
@@ -88,25 +102,28 @@ router bgp {{ asn }}
    neighbor UNDERLAY_SPINES_V4 password 7 {{ underlay_pw }}
    neighbor UNDERLAY_SPINES_V4 send-community
    neighbor UNDERLAY_SPINES_V4 maximum-routes 12000 warning-limit 80 percent
-   {%- for peer in fabric_peers %}
-   {%- if peer.hostname == hostname %}
-   {%- if peer.type == "underlay" %}
-   neighbor {{ peer.ip }} peer group underlay
+   {%- for peergroup in bgp.peergroups %}
+   {%-   for peer in peergroup %}
+   {%-     if peer.hostname == hostname and peergroup == 'UNDERLAY_SPINES_V4' %}
+   neighbor {{ peer.ip }} peer group UNDERLAY_SPINES_V4
    neighbor {{ peer.ip }} description {{ peer.peer_hostname }}
-   {%- endif %}
-   {%- endif %}
+   {%-     endif %}   
+   {%-     if peer.hostname == hostname and peergroup == 'OVERLAY_SPINES_EVPN' %}
+   neighbor {{ peer.ip }} peer group OVERLAY_SPINES_EVPN
+   neighbor {{ peer.ip }} description {{ peer.description }}
+   {%-     endif %}
+   {%-   endfor %}
    {%- endfor %}
-   {%- for peer in spines_lo0 %}
-   neighbor {{ peer.ip }} peer group overlay
-   neighbor {{ peer.ip }} description {{ peer.desc }}
+   {%- for peer_ip in spine_router_ids %}
+   neighbor {{ peer_ip }} peer group OVERLAY_SPINES_EVPN=
    {%- endfor %}
-   {%- if odd_leaf != 'no mlag' %}
-   {%- if odd_leaf %}
-   neighbor 192.168.255.1 peer group mlag-peer
-   neighbor 192.168.255.1 description {{ mlag_peer }} MLAG
+   {%- if mlag_heartbeat_ip is not None %}
+   {%- if hostname[-1].upper() == 'A' %}
+   neighbor {{ mlag_peering_b }} peer group UNDERLAY_MLAG_PEER
+   neighbor {{ mlag_peering_b }} description {{ hostname[0:-1] + 'B' }}-MLAG
    {%- else %}
-   neighbor 192.168.255.0 peer group mlag-peer
-   neighbor 192.168.255.0 description {{ mlag_peer }} MLAG
+   neighbor {{ mlag_peering_a }} peer group UNDERLAY_MLAG_PEER
+   neighbor {{ mlag_peering_a }} description {{ hostname[0:-1] + 'B' }}-MLAG
    {%- endif %}
    {%- endif %}
    !
@@ -115,10 +132,10 @@ router bgp {{ asn }}
    !
    address-family ipv4
       neighbor underlay activate
-      {%- if odd_leaf != 'no mlag' %}
-      neighbor mlag-peer activate
+      {%- if mlag_heartbeat_ip is not None %}
+      neighbor UNDERLAY_MLAG_PEER activate
       {%- endif %}
-      network {{ lo0 }}/32
-      network {{ lo1 }}/32
+      network {{ router_id }}/32
+      network {{ vtep }}/32
 !
 end
